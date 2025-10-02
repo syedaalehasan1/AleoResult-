@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Result Portal</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css"/>
+  <style>
+    body { font-family: 'Inter', sans-serif; background: linear-gradient(135deg, #0f172a, #1e293b); min-height: 100vh; }
+    .glow-input:focus { box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.5); }
+    .ai-bubble { max-width: 85%; padding: 12px 16px; border-radius: 18px; margin-bottom: 12px; line-height: 1.5; }
+    .user-bubble { background: #4f46e5; color: white; margin-left: auto; border-bottom-right-radius: 4px; }
+    .ai-bubble-response { background: #1e293b; border: 1px solid #334155; border-bottom-left-radius: 4px; }
+  </style>
+</head>
+<body class="flex flex-col items-center justify-start p-4 pt-8">
+
+    <!-- adsterra ads --->
+      <div class="ad-banner">
+        <script type="text/javascript">
+	atOptions = {
+		'key' : '907780b00a84de62c36b0598a49a8473',
+		'format' : 'iframe',
+		'height' : 50,
+		'width' : 320,
+		'params' : {}
+	};
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/907780b00a84de62c36b0598a49a8473/invoke.js"></script>
+  </div>
+
+  <div id="mainContainer" class="w-full max-w-md animate__animated animate__fadeIn">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-white">Result Portal</h1>
+      <p class="text-slate-400 mt-2">Select class and enter roll number to view result</p>
+    </div>
+
+    <div class="bg-slate-800/50 backdrop-blur-sm rounded-2xl p-6 border border-slate-700">
+      <label for="studentClass" class="block text-sm font-medium text-slate-300 mb-2">Select Class</label>
+      <select id="studentClass" required class="glow-input w-full px-4 py-3 bg-slate-900/70 border border-slate-600 rounded-xl text-white mb-4">
+          <option value="">-- Select Class --</option>
+          <option value="Nursery">Nursery</option><option value="LKG">LKG</option><option value="UKG">UKG</option>
+          <option value="1st">1st</option><option value="2nd">2nd</option><option value="3rd">3rd</option>
+          <option value="4th">4th</option><option value="5th">5th</option><option value="6th">6th</option>
+          <option value="7th">7th</option><option value="8th">8th</option><option value="9th">9th</option>
+          <option value="10th">10th</option><option value="11th">11th</option><option value="12th">12th</option>
+      </select>
+
+      <label for="rollNumber" class="block text-sm font-medium text-slate-300 mb-2">Roll Number</label>
+      <input type="text" id="rollNumber" class="glow-input w-full px-4 py-3 bg-slate-900/70 border border-slate-600 rounded-xl text-white" placeholder="e.g., 12345"/>
+      <button id="searchBtn" class="w-full mt-4 py-3 bg-indigo-600 hover:bg-indigo-500 rounded-xl text-white font-medium">View Result</button>
+      <p id="errorMessage" class="mt-3 text-red-400 text-sm h-6 text-center"></p>
+    </div>
+  </div>
+
+  <div id="resultCard" class="hidden w-full max-w-2xl mt-6">
+    <div class="bg-slate-800/60 backdrop-blur rounded-2xl p-6 border border-slate-700">
+        <div class="flex justify-between items-start">
+            <div>
+              <h2 id="studentName" class="text-2xl font-bold text-white"></h2>
+              <p id="studentClassDisplay" class="text-slate-400 mt-1"></p>
+            </div>
+            <span id="resultStatus" class="px-3 py-1 rounded-full text-sm font-semibold"></span>
+        </div>
+        <div class="grid grid-cols-2 gap-4 mt-6 text-sm">
+            <div><p class="text-slate-400">Roll Number</p><p id="rollDisplay" class="text-white font-medium"></p></div>
+            <div><p class="text-slate-400">Parents</p><p id="parentsName" class="text-white font-medium"></p></div>
+            <div><p class="text-slate-400">Date of Birth</p><p id="dobDisplay" class="text-white font-medium"></p></div>
+            <div><p class="text-slate-400">Total Marks</p><p id="totalDisplay" class="text-white font-medium"></p></div>
+        </div>
+        <div class="mt-6"><h3 class="text-lg font-semibold text-white mb-3">Subject-wise Marks</h3><div id="subjectsList" class="space-y-2 border-t border-slate-700 pt-3"></div></div>
+        <div class="mt-6 pt-4 border-t border-slate-700 flex justify-between items-center">
+            <span id="percentage" class="text-indigo-300 font-medium"></span>
+            <button id="backBtn" class="text-slate-400 hover:text-white text-sm font-medium">← Check Another</button>
+        </div>
+    </div>
+    <div class="text-center mt-6">
+        <button id="aiBtn" class="text-indigo-300 hover:text-indigo-100 font-medium">🤖 Ask AI Assistant</button>
+    </div>
+  </div>
+
+  <div id="aiModal" class="hidden fixed inset-0 bg-black/70 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-slate-800 rounded-2xl w-full max-w-lg h-[85vh] flex flex-col">
+        <div class="p-5 border-b border-slate-700 flex justify-between items-center"><h3 class="text-white font-semibold">AI Academic Advisor</h3><button id="closeAI" class="text-slate-400 hover:text-white text-xl">×</button></div>
+        <div id="aiChat" class="flex-1 overflow-y-auto p-4 space-y-4 text-sm"></div>
+        <div class="p-4 border-t border-slate-700"><textarea id="aiInput" rows="2" class="w-full p-2 bg-slate-900 border border-slate-600 rounded-lg text-white" placeholder="Ask a question..."></textarea><button id="sendAI" class="mt-2 w-full py-2.5 bg-indigo-600 rounded-lg text-white text-sm font-medium">Send</button></div>
+    </div>
+  </div>
+
+ <!--- adsterra ads --->
+  <div class="ad-native-banner">
+    <script async="async" data-cfasync="false" src="//pl27761322.revenuecpmgate.com/f9e99c3054961c7e38d8662179eb98da/invoke.js"></script>
+<div id="container-f9e99c3054961c7e38d8662179eb98da"></div>
+   </div>
+
+ <div class="ad-banner">
+  <script type="text/javascript">
+	atOptions = {
+		'key' : '45627492039b40830daad2e8603e93b6',
+		'format' : 'iframe',
+		'height' : 160,
+		'width' : 300,
+		'params' : {}
+	};
+</script>
+<script type="text/javascript" src="//www.highperformanceformat.com/45627492039b40830daad2e8603e93b6/invoke.js"></script>
+</div>
+
+<script>
+    const SUPABASE_URL='https://fsyjoamlabvdppbpofvh.supabase.co';
+   const SUPABASE_ANON_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZzeWpvYW1sYWJ2ZHBwYnBvZnZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTkyMTExNTgsImV4cCI6MjA3NDc4NzE1OH0.CgB1oMcQrQ7UwkhYAG6UKM4wFaznC0oBiWVt-Rlayg8';
+
+
+    const mainContainer = document.getElementById('mainContainer');
+    const resultCard = document.getElementById('resultCard');
+    const searchBtn = document.getElementById('searchBtn');
+    const backBtn = document.getElementById('backBtn');
+    const errorMessage = document.getElementById('errorMessage');
+
+    const fetchStudentResult = async () => {
+        const roll = document.getElementById('rollNumber').value.trim();
+        const studentClass = document.getElementById('studentClass').value;
+        if (!roll || !studentClass) {
+            errorMessage.textContent = 'Please select class and enter roll number.';
+            return;
+        }
+        errorMessage.textContent = '';
+        
+        try {
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/results?class=eq.${encodeURIComponent(studentClass)}&roll_number=eq.${encodeURIComponent(roll)}`, {
+                headers: { 'apikey': SUPABASE_ANON_KEY, 'Authorization': `Bearer ${SUPABASE_ANON_KEY}` }
+            });
+            const data = await res.json();
+            if (!data || data.length === 0) {
+                errorMessage.textContent = 'No result found for this roll number and class.';
+                return;
+            }
+            displayResult(data[0]);
+        } catch (err) {
+            errorMessage.textContent = 'Failed to fetch result. Please try again.';
+        }
+    };
+
+    const displayResult = (student) => {
+        let totalMarks = 0;
+        let subjectsCount = 0;
+        const subjectsListEl = document.getElementById('subjectsList');
+        subjectsListEl.innerHTML = '';
+
+        for (let i = 1; i <= 10; i++) {
+            if (student[`sub${i}_marks`] != null) {
+                totalMarks += student[`sub${i}_marks`];
+                subjectsCount++;
+                subjectsListEl.innerHTML += `<div class="flex justify-between text-sm"><span class="text-slate-300">${student[`sub${i}_name`]}</span><span class="text-white font-medium">${student[`sub${i}_marks`]}</span></div>`;
+            }
+        }
+        
+        const maxTotalMarks = subjectsCount * 100;
+        const percentage = ((totalMarks / maxTotalMarks) * 100).toFixed(2);
+        const isPass = parseFloat(percentage) >= 35;
+
+        document.getElementById('studentName').textContent = student.name;
+        document.getElementById('studentClassDisplay').textContent = `Class: ${student.class}`;
+        document.getElementById('rollDisplay').textContent = student.roll_number;
+        document.getElementById('parentsName').textContent = student.parents_name;
+        document.getElementById('dobDisplay').textContent = student.dob;
+        document.getElementById('totalDisplay').textContent = `${totalMarks} / ${maxTotalMarks}`;
+        document.getElementById('percentage').textContent = `${percentage}%`;
+        const statusEl = document.getElementById('resultStatus');
+        statusEl.textContent = isPass ? 'PASS' : 'FAIL';
+        statusEl.className = `px-3 py-1 rounded-full text-sm font-semibold ${isPass ? 'bg-emerald-900/50 text-emerald-300' : 'bg-rose-900/50 text-rose-300'}`;
+
+        mainContainer.classList.add('hidden');
+        resultCard.classList.remove('hidden');
+    };
+
+    searchBtn.addEventListener('click', fetchStudentResult);
+    backBtn.addEventListener('click', () => {
+        resultCard.classList.add('hidden');
+        mainContainer.classList.remove('hidden');
+        document.getElementById('rollNumber').value = '';
+        document.getElementById('studentClass').value = '';
+    });
+
+    // --- AI Chat Logic ---
+    const aiModal = document.getElementById('aiModal');
+    const aiChat = document.getElementById('aiChat');
+    const aiInput = document.getElementById('aiInput');
+
+    document.getElementById('aiBtn').addEventListener('click', () => aiModal.classList.remove('hidden'));
+    document.getElementById('closeAI').addEventListener('click', () => aiModal.classList.add('hidden'));
+
+    const addMessageToChat = (message, sender) => {
+        aiChat.innerHTML += `<div class="ai-bubble ${sender === 'user' ? 'user-bubble' : 'ai-bubble-response'}">${message}</div>`;
+        aiChat.scrollTop = aiChat.scrollHeight;
+    };
+
+    const getGeminiResponse = async (prompt) => {
+        addMessageToChat('Thinking...', 'ai');
+        // ----------------- IMPORTANT -----------------
+        // Yahan seedhe API call na karein. Apne backend server ka URL daalein.
+        // Aapka backend server Gemini API se baat karega.
+        const BACKEND_URL = 'https://your-backend-server.com/ask-gemini';
+
+        try {
+            const response = await fetch(BACKEND_URL, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ prompt: prompt })
+            });
+
+            if (!response.ok) {
+                throw new Error('Network response was not ok.');
+            }
+            const data = await response.json();
+            
+            // Remove "Thinking..." message
+            aiChat.removeChild(aiChat.lastElementChild);
+            addMessageToChat(data.text, 'ai'); // Assume backend returns { text: "..." }
+
+        } catch (error) {
+            aiChat.removeChild(aiChat.lastElementChild);
+            addMessageToChat('Sorry, I am having trouble connecting. Please try again later.', 'ai');
+            console.error("AI Error:", error);
+        }
+    };
+    
+    document.getElementById('sendAI').addEventListener('click', () => {
+        const prompt = aiInput.value.trim();
+        if (!prompt) return;
+        addMessageToChat(prompt, 'user');
+        aiInput.value = '';
+        getGeminiResponse(prompt);
+    });
+
+</script>
+</body>
+</html>
